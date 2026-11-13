@@ -27,6 +27,22 @@ import {
   RouteNode
 } from './routing-engine'
 
+function getRandomIncomingMessage(): string {
+  const messages = [
+    'Hello, this is a test message',
+    'Node status update: all systems nominal',
+    'Transmitting telemetry data packet',
+    'Secure handshake verification in progress',
+    'Route optimization request',
+    'Network health check response',
+    'Peer discovery notification',
+    'Encrypted payload received',
+    'Connection keep-alive signal',
+    'Bandwidth allocation update'
+  ]
+  return messages[Math.floor(Math.random() * messages.length)]
+}
+
 export type NodeType = 'relay' | 'endpoint' | 'gateway'
 export type NodeStatus = 'online' | 'degraded' | 'offline'
 export type ConnectionStatus = 'pending' | 'handshaking' | 'connected' | 'terminated' | 'failed'
@@ -171,6 +187,8 @@ export interface NetworkMetrics {
     packetLoss: number
   }[]
 }
+
+const liveRoutingGraph: Record<string, RouteNode> = {}
 
 interface SimulationState {
   // Core state
@@ -411,15 +429,6 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
       })
     }
 
-    const liveRoutingGraph: Record<string, RouteNode> = {}
-    for (const node of newNodes) {
-      liveRoutingGraph[node.id] = {
-        id: node.id,
-        neighbors: node.connections,
-        latency: node.latency
-      }
-    }
-
     // Discovery scan simulation
     if (isScanning && Math.random() < 0.15) {
       const undiscovered = potentialPeers.filter(
@@ -500,8 +509,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             type: 'message_sent',
             message: `Message delivered to ${conn?.remotePeerLabel || 'peer'}`,
             severity: 'success',
-            connectionId: msg.connectionId
-          })
+            connectionId: msg.connectionId,
+            encrypted: msg.encrypted,
+            verified: msg.verified
+          } as NetworkEvent)
         }
       }
     }
@@ -516,7 +527,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           content: getRandomIncomingMessage(),
           timestamp: Date.now(),
           status: 'delivered',
-          size: Math.floor(Math.random() * 500) + 50
+          size: Math.floor(Math.random() * 500) + 50,
+          encrypted: Math.random() < 0.8,
+          verified: true
         }
         newMessages.push(incomingMsg)
         newEvents.push({
@@ -525,8 +538,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           type: 'message_received',
           message: `Message received from ${conn.remotePeerLabel}`,
           severity: 'info',
-          connectionId: conn.id
-        })
+          connectionId: conn.id,
+          encrypted: incomingMsg.encrypted,
+          verified: incomingMsg.verified
+        } as NetworkEvent)
       }
     }
 
@@ -1216,8 +1231,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
             type: 'message_sent',
             message: `${msg.encrypted ? 'Encrypted m' : 'M'}essage delivered to ${conn?.remotePeerLabel || 'peer'}`,
             severity: 'success',
-            connectionId: msg.connectionId
-          })
+            connectionId: msg.connectionId,
+            encrypted: msg.encrypted,
+            verified: msg.verified
+          } as NetworkEvent)
         }
       }
     }
@@ -1243,8 +1260,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => {
           type: 'message_received',
           message: `${incomingMsg.encrypted ? 'Encrypted m' : 'M'}essage received from ${conn.remotePeerLabel}`,
           severity: 'info',
-          connectionId: conn.id
-        })
+          connectionId: conn.id,
+          encrypted: incomingMsg.encrypted,
+          verified: incomingMsg.verified
+        } as NetworkEvent)
       }
     }
 

@@ -1,3 +1,20 @@
+declare module 'react-resizable-panels' {
+  export namespace ResizablePrimitive {
+    export interface PanelGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+      direction?: 'horizontal' | 'vertical'
+      className?: string
+    }
+    export const PanelGroup: React.FC<PanelGroupProps>
+    export interface PanelResizeHandleProps extends React.HTMLAttributes<HTMLDivElement> {
+      orientation?: 'horizontal' | 'vertical'
+      className?: string
+    }
+    export const PanelResizeHandle: React.FC<PanelResizeHandleProps>
+    export interface PanelProps extends React.HTMLAttributes<HTMLDivElement>
+    export const Panel: React.FC<PanelProps>
+  }
+}
+
 'use client'
 
 import * as React from 'react'
